@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boek Nu | YJCarCare - Car Detailing Houthalen-Helchteren</title>
+    <meta name="description" content="Boek je car detailing afspraak online bij YJCarCare in Houthalen-Helchteren. Kies je pakket, datum en tijd. Betaal online of contant.">
+    
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0a0a0a;
+            --secondary: #141414;
+            --tertiary: #1f1f1f;
+            --white: #ffffff;
+            --gray-100: #f5f5f5;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --accent: #1e3a5f;
+            --accent-light: #3b82f6;
+            --silver: #c0c0c0;
+            --success: #22c55e;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--white);
+            background-color: var(--primary);
+        }
+        
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        button {
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--tertiary);
+        }
+        
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: -0.5px;
+        }
+        
+        .logo span {
+            color: var(--accent-light);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+        
+        .nav-links a {
+            color: var(--gray-300);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-links a:hover {
+            color: var(--white);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-light);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .nav-cta {
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.75rem 1.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-cta:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            color: var(--white);
+            font-size: 1.5rem;
+        }
+        
+        /* Page Header */
+        .page-header {
+            padding: 10rem 0 4rem;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .page-header p {
+            color: var(--gray-300);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Booking Section */
+        .booking-section {
+            padding: 4rem 0 6rem;
+            background: var(--primary);
+        }
+        
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 3rem;
+            align-items: start;
+        }
+        
+        /* Package Selection */
+        .package-selection {
+            background: var(--secondary);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--tertiary);
+        }
+        
+        .package-selection h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .package-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--tertiary);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .package-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .package-option.selected {
+            border-color: var(--accent-light);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .package-option input[type="radio"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent-light);
+            cursor: pointer;
+        }
+        
+        .package-info {
+            flex: 1;
+        }
+        
+        .package-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .package-info p {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+        }
+        
+        .package-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+        
+        /* Booking Form */
+        .booking-form-wrapper {
+            background: var(--secondary);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--tertiary);
+        }
+        
+        .booking-form-wrapper h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-300);
+            font-size: 0.9rem;
+        }
+        
+        .form-group label span {
+            color: var(--accent-light);
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--tertiary);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--white);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-light);
+        }
+        
+        .form-group input::placeholder {
+            color: var(--gray-700);
+        }
+        
+        /* Calendar */
+        .calendar-container {
+            margin-bottom: 1.25rem;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .calendar-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .calendar-nav button {
+            width: 32px;
+            height: 32px;
+            background: var(--tertiary);
+            color: var(--white);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-nav button:hover {
+            background: var(--accent);
+        }
+        
+        .calendar-nav button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            padding: 0.5rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--tertiary);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .calendar-day:hover:not(.disabled):not(.selected) {
+            border-color: var(--accent);
+        }
+        
+        .calendar-day.selected {
+            background: var(--accent-light);
+            border-color: var(--accent-light);
+        }
+        
+        .calendar-day.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .calendar-day.other-month {
+            color: var(--gray-700);
+        }
+        
+        .calendar-day.today {
+            border-color: var(--accent);
+        }
+        
+        /* Time Slots */
+        .time-slots {
+            margin-bottom: 1.25rem;
+        }
+        
+        .time-slots h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .time-slot {
+            padding: 0.75rem;
+            background: var(--tertiary);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .time-slot:hover:not(.disabled):not(.selected) {
+            border-color: var(--accent);
+        }
+        
+        .time-slot.selected {
+            background: var(--accent-light);
+            border-color: var(--accent-light);
+        }
+        
+        .time-slot.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: rgba(255,255,255,0.02);
+            text-decoration: line-through;
+        }
+        
+        .time-slot-message {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1rem;
+            background: var(--tertiary);
+            border-radius: 8px;
+        }
+        
+        /* Payment Options */
+        .payment-options {
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-options h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--tertiary);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .payment-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .payment-option.selected {
+            border-color: var(--accent-light);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .payment-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent-light);
+        }
+        
+        .payment-option div strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+        
+        .payment-option div span {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+        
+        /* Summary */
+        .booking-summary {
+            background: var(--tertiary);
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .booking-summary h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .summary-row span:first-child {
+            color: var(--gray-500);
+        }
+        
+        .summary-row.total {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .summary-row.total span:last-child {
+            color: var(--accent-light);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            display: none;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        .message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+        }
+        
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .loading-overlay.show {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--tertiary);
+            border-top-color: var(--accent-light);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-overlay p {
+            margin-top: 1rem;
+            color: var(--gray-300);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--secondary);
+            padding: 3rem 0 2rem;
+            border-top: 1px solid var(--tertiary);
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+        
+        .footer-section p, .footer-section a {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        
+        .footer-section a:hover {
+            color: var(--accent-light);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid var(--tertiary);
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--secondary);
+                flex-direction: column;
+                padding: 1.5rem;
+                gap: 1rem;
+                border-top: 1px solid var(--tertiary);
+            }
+            
+            .nav-links.active {
+                display: flex;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-cta {
+                display: none;
+            }
+            
+            .page-header {
+                padding: 8rem 0 3rem;
+            }
+            
+            .booking-section {
+                padding: 2rem 0 4rem;
+            }
+            
+            .booking-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-slots-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .package-selection,
+            .booking-form-wrapper {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">YJ<span>CarCare</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#before-after">Resultaten</a></li>
+                <li><a href="index.html#why-us">Over Ons</a></li>
+                <li><a href="index.html#testimonials">Reviews</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="booking.html" class="nav-cta">Boek Nu</a></li>
+            </ul>
+            <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Boek Je Afspraak</h1>
+            <p>Kies je pakket, selecteer een datum en tijd, en betaal online of ter plaatse.</p>
+        </div>
+    </section>
+
+    <!-- Booking Section -->
+    <section class="booking-section">
+        <div class="container">
+            <div class="booking-grid">
+                <!-- Package Selection -->
+                <div class="package-selection">
+                    <h2>Kies Je Pakket</h2>
+                    
+                    <label class="package-option" data-package="basic" data-price="89">
+                        <input type="radio" name="package" value="basic">
+                        <div class="package-info">
+                            <h3>Basic Clean</h3>
+                            <p>Handwas, interieur, ramen</p>
+                        </div>
+                        <div class="package-price">€89</div>
+                    </label>
+                    
+                    <label class="package-option selected" data-package="premium" data-price="179">
+                        <input type="radio" name="package" value="premium" checked>
+                        <div class="package-info">
+                            <h3>Premium Detail</h3>
+                            <p>Clay bar, polijsten, coating</p>
+                        </div>
+                        <div class="package-price">€179</div>
+                    </label>
+                    
+                    <label class="package-option" data-package="ultimate" data-price="299">
+                        <input type="radio" name="package" value="ultimate">
+                        <div class="package-info">
+                            <h3>Ultimate Protection</h3>
+                            <p>Keramische coating, correctie</p>
+                        </div>
+                        <div class="package-price">€299</div>
+                    </label>
+                </div>
+                
+                <!-- Booking Form -->
+                <div class="booking-form-wrapper">
+                    <h2>Jouw Gegevens</h2>
+                    
+                    <div class="message success" id="successMessage">
+                        ✅ Je boeking is bevestigd! We sturen je een bevestigingsmail.
+                    </div>
+                    
+                    <div class="message error" id="errorMessage"></div>
+                    
+                    <form id="bookingForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">Voornaam <span>*</span></label>
+                                <input type="text" id="firstName" name="firstName" placeholder="Voornaam" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Achternaam <span>*</span></label>
+                                <input type="text" id="lastName" name="lastName" placeholder="Achternaam" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">E-mail <span>*</span></label>
+                                <input type="email" id="email" name="email" placeholder="jouw@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Telefoon <span>*</span></label>
+                                <input type="tel" id="phone" name="phone" placeholder="+32 4XX XX XX XX" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="carType">Auto Type <span>*</span></label>
+                            <input type="text" id="carType" name="carType" placeholder="Bijv. BMW 3 Serie, Audi A4..." required>
+                        </div>
+                        
+                        <!-- Calendar -->
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <h3 id="currentMonth">Januari 2024</h3>
+                                <div class="calendar-nav">
+                                    <button type="button" id="prevMonth">‹</button>
+                                    <button type="button" id="nextMonth">›</button>
+                                </div>
+                            </div>
+                            <div class="calendar-grid" id="calendarGrid">
+                                <!-- Calendar generated by JS -->
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="selectedDate" name="selectedDate" required>
+                        
+                        <!-- Time Slots -->
+                        <div class="time-slots">
+                            <h3>Beschikbare Tijden</h3>
+                            <div class="time-slots-grid" id="timeSlots">
+                                <div class="time-slot-message">Selecteer eerst een datum</div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="selectedTime" name="selectedTime" required>
+                        
+                        <!-- Payment Options -->
+                        <div class="payment-options">
+                            <h3>Betaalmethode</h3>
+                            
+                            <label class="payment-option selected" data-payment="online">
+                                <input type="radio" name="payment" value="online" checked>
+                                <div>
+                                    <strong>Online Betalen</strong>
+                                    <span>Veilig betalen met creditcard of iDEAL</span>
+                                </div>
+                            </label>
+                            
+                            <label class="payment-option" data-payment="cash">
+                                <input type="radio" name="payment" value="cash">
+                                <div>
+                                    <strong>Contant Betalen</strong>
+                                    <span>Betaal ter plaatse na de behandeling</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Summary -->
+                        <div class="booking-summary">
+                            <h3>Overzicht</h3>
+                            <div class="summary-row">
+                                <span>Gekozen pakket:</span>
+                                <span id="summaryPackage">Premium Detail</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Datum:</span>
+                                <span id="summaryDate">-</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Tijd:</span>
+                                <span id="summaryTime">-</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Totaal:</span>
+                                <span id="summaryTotal">€179</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            Bevestig Boeking
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Even geduld...</p>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>YJCarCare</h4>
+                    <p>Professionele car detailing in Houthalen-Helchteren. Wij brengen je auto terug in showroom staat.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 <a href="tel:+32478105060">+32 478 10 50 60</a></p>
+                    <p>✉️ <a href="mailto:metten.dante@gmail.com">metten.dante@gmail.com</a></p>
+                    <p>📍 Houthalen-Helchteren</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Links</h4>
+                    <p><a href="index.html">Home</a></p>
+                    <p><a href="contact.html">Contact</a></p>
+                    <p><a href="booking.html">Boeken</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 YJCarCare. Alle rechten voorbehouden.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ========== CONFIGURATION ==========
+        // Replace with your Stripe publishable key
+        const STRIPE_PUBLISHABLE_KEY = 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY';
+        
+        // Initialize Stripe (only if key is provided)
+        let stripe = null;
+        if (STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.includes('YOUR_')) {
+            stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+        }
+        
+        // ========== MOBILE MENU ==========
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+        
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('active');
+            });
+        });
+        
+        // ========== PACKAGE SELECTION ==========
+        const packageOptions = document.querySelectorAll('.package-option');
+        let selectedPackage = { name: 'Premium Detail', price: 179 };
+        
+        packageOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                packageOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+                
+                selectedPackage = {
+                    name: this.querySelector('h3').textContent,
+                    price: parseInt(this.dataset.price)
+                };
+                
+                updateSummary();
+            });
+        });
+        
+        // ========== CALENDAR ==========
+        const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                           'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+        const dayNames = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+        
+        let currentDate = new Date();
+        let selectedDate = null;
+        let selectedTime = null;
+        
+        // Generate time slots (8:00 - 17:00, every 2 hours)
+        const timeSlots = ['08:00', '10:00', '12:00', '14:00', '16:00'];
+        
+        // Load booked slots from localStorage (simulating backend)
+        function getBookedSlots() {
+            const booked = localStorage.getItem('yjcarcare_bookings');
+            return booked ? JSON.parse(booked) : {};
+        }
+        
+        function saveBooking(date, time) {
+            const booked = getBookedSlots();
+            if (!booked[date]) booked[date] = [];
+            booked[date].push(time);
+            localStorage.setItem('yjcarcare_bookings', JSON.stringify(booked));
+        }
+        
+        function isSlotBooked(date, time) {
+            const booked = getBookedSlots();
+            return booked[date] && booked[date].includes(time);
+        }
+        
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Day headers
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Previous month days
+            const startDay = firstDay === 0 ? 6 : firstDay - 1;
+            for (let i = startDay - 1; i >= 0; i--) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month disabled';
+                day.textContent = daysInPrevMonth - i;
+                grid.appendChild(day);
+            }
+            
+            // Current month days
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day';
+                day.textContent = i;
+                
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                // Check if date is in the past
+                const checkDate = new Date(year, month, i);
+                const isPast = checkDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                
+                // Check if Sunday
+                const isSunday = checkDate.getDay() === 0;
+                
+                if (isPast || isSunday) {
+                    day.classList.add('disabled');
+                } else {
+                    day.addEventListener('click', () => selectDate(dateStr, day));
+                }
+                
+                // Mark today
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                    day.classList.add('today');
+                }
+                
+                // Mark selected
+                if (selectedDate === dateStr) {
+                    day.classList.add('selected');
+                }
+                
+                grid.appendChild(day);
+            }
+            
+            // Next month days
+            const totalCells = grid.children.length - 7; // Subtract headers
+            const remainingCells = 35 - totalCells;
+            for (let i = 1; i <= remainingCells; i++) {
+                const day = document.createElement('div');
+                day.className = 'calendar-day other-month disabled';
+                day.textContent = i;
+                grid.appendChild(day);
+            }
+        }
+        
+        function selectDate(dateStr, element) {
+            selectedDate = dateStr;
+            selectedTime = null;
+            document.getElementById('selectedDate').value = dateStr;
+            document.getElementById('selectedTime').value = '';
+            
+            // Update calendar UI
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Render time slots
+            renderTimeSlots();
+            updateSummary();
+        }
+        
+        function renderTimeSlots() {
+            const container = document.getElementById('timeSlots');
+            
+            if (!selectedDate) {
+                container.innerHTML = '<div class="time-slot-message">Selecteer eerst een datum</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            timeSlots.forEach(time => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = time;
+                
+                if (isSlotBooked(selectedDate, time)) {
+                    slot.classList.add('disabled');
+                    slot.title = 'Dit tijdslot is al geboekt';
+                } else {
+                    slot.addEventListener('click', () => selectTime(time, slot));
+                }
+                
+                if (selectedTime === time) {
+                    slot.classList.add('selected');
+                }
+                
+                container.appendChild(slot);
+            });
+        }
+        
+        function selectTime(time, element) {
+            selectedTime = time;
+            document.getElementById('selectedTime').value = time;
+            
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            updateSummary();
+        }
+        
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+        
+        // ========== PAYMENT OPTIONS ==========
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        let selectedPayment = 'online';
+        
+        paymentOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                this.querySelector('input').checked = true;
+                selectedPayment = this.dataset.payment;
+            });
+        });
+        
+        // ========== SUMMARY ==========
+        function updateSummary() {
+            document.getElementById('summaryPackage').textContent = selectedPackage.name;
+            document.getElementById('summaryDate').textContent = selectedDate ? formatDate(selectedDate) : '-';
+            document.getElementById('summaryTime').textContent = selectedTime || '-';
+            document.getElementById('summaryTotal').textContent = `€${selectedPackage.price}`;
+        }
+        
+        function formatDate(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day} ${monthNames[parseInt(month) - 1]} ${year}`;
+        }
+        
+        // ========== FORM SUBMISSION ==========
+        document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            
+            // Reset messages
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+            
+            // Validation
+            if (!selectedDate) {
+                errorMessage.textContent = '❌ Selecteer een datum.';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            if (!selectedTime) {
+                errorMessage.textContent = '❌ Selecteer een tijdslot.';
+                errorMessage.classList.add('show');
+                return;
+            }
+            
+            // Check if slot is still available (prevent double booking)
+            if (isSlotBooked(selectedDate, selectedTime)) {
+                errorMessage.textContent = '❌ Dit tijdslot is helaas net geboekt. Kies een andere tijd.';
+                errorMessage.classList.add('show');
+                renderTimeSlots();
+                return;
+            }
+            
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                carType: document.getElementById('carType').value,
+                package: selectedPackage.name,
+                price: selectedPackage.price,
+                date: selectedDate,
+                time: selectedTime,
+                payment: selectedPayment
+            };
+            
+            loadingOverlay.classList.add('show');
+            submitBtn.disabled = true;
+            
+            try {
+                if (selectedPayment === 'online' && stripe) {
+                    // Stripe Checkout
+                    // In production, you would call your backend to create a checkout session
+                    // For demo purposes, we'll simulate the Stripe flow
+                    
+                    // Simulate Stripe redirect
+                    await simulateStripeCheckout(formData);
+                    
+                } else {
+                    // Cash payment - save booking directly
+                    await processBooking(formData);
+                }
+                
+            } catch (error) {
+                loadingOverlay.classList.remove('show');
+                submitBtn.disabled = false;
+                errorMessage.textContent = '❌ Er is iets misgegaan. Probeer het opnieuw.';
+                errorMessage.classList.add('show');
+            }
+        });
+        
+        async function simulateStripeCheckout(formData) {
+            // Simulate API call to create checkout session
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // In production, redirect to Stripe Checkout:
+                    // stripe.redirectToCheckout({ sessionId: session.id });
+                    
+                    // For demo, process the booking
+                    processBooking(formData);
+                    resolve();
+                }, 2000);
+            });
+        }
+        
+        async function processBooking(formData) {
+            // Save booking to prevent double booking
+            saveBooking(formData.date, formData.time);
+            
+            // Send email notification (in production, this would be server-side)
+            // For now, we just simulate the success
+            
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').classList.remove('show');
+                    document.getElementById('successMessage').classList.add('show');
+                    document.getElementById('submitBtn').disabled = false;
+                    document.getElementById('submitBtn').textContent = 'Boeking Bevestigd!';
+                    
+                    // Reset form after delay
+                    setTimeout(() => {
+                        document.getElementById('bookingForm').reset();
+                        selectedDate = null;
+                        selectedTime = null;
+                        document.getElementById('selectedDate').value = '';
+                        document.getElementById('selectedTime').value = '';
+                        renderCalendar();
+                        renderTimeSlots();
+                        updateSummary();
+                        document.getElementById('successMessage').classList.remove('show');
+                        document.getElementById('submitBtn').textContent = 'Bevestig Boeking';
+                    }, 3000);
+                    
+                    resolve();
+                }, 1500);
+            });
+        }
+        
+        // ========== URL PARAMS (Pre-select package) ==========
+        function getUrlParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        // Pre-select package from URL
+        const packageParam = getUrlParam('package');
+        if (packageParam) {
+            const packageOption = document.querySelector(`[data-package="${packageParam}"]`);
+            if (packageOption) {
+                packageOption.click();
+            }
+        }
+        
+        // ========== INIT ==========
+        renderCalendar();
+        updateSummary();
+    </script>
+</body>
+</html>
